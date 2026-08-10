@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="128" height="128" role="img" aria-label="hark">
+  <style>
+    .m { stroke: #16181d }
+    @media (prefers-color-scheme: dark) { .m { stroke: #f0f2f5 } }
+  </style>
+  <g class="m" fill="none" stroke="#16181d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 8 16 16 6 24"/>
+    <path d="M19.21 10.61a7.5 7.5 0 0 1 0 10.78"/>
+    <path d="M22.68 7.01a12.5 12.5 0 0 1 0 17.98"/>
+  </g>
+</svg>

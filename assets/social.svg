@@ -1,0 +1,15 @@
+<!-- Source for social.png (GitHub repo social preview, 1280x640).
+     Rasterised on macOS by padding this artwork into a 1280x1280 canvas,
+     running `qlmanage -t -s 1280`, then `sips -c 640 1280` to crop the
+     middle band back out. The text uses Menlo, so it must be converted by
+     a renderer that has it; the PNG is the artefact that ships. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <rect width="1280" height="640" fill="#0d0f12"/>
+  <g transform="translate(560 122.5) scale(5)" fill="none" stroke="#f0f2f5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 8 16 16 6 24"/>
+    <path d="M19.21 10.61a7.5 7.5 0 0 1 0 10.78"/>
+    <path d="M22.68 7.01a12.5 12.5 0 0 1 0 17.98"/>
+  </g>
+  <text x="640" y="397" text-anchor="middle" font-family="Menlo, monospace" font-size="130" fill="#f0f2f5">hark</text>
+  <text x="640" y="485" text-anchor="middle" font-family="Menlo, monospace" font-size="32" fill="#7d858f">sound notifications for coding agents</text>
+</svg>

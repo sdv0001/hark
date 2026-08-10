@@ -1,3 +1,5 @@
+<img src="assets/hark.svg" alt="" width="64">
+
 # hark
 
 [![CI](https://github.com/sdv0001/hark/actions/workflows/ci.yml/badge.svg)](https://github.com/sdv0001/hark/actions/workflows/ci.yml)
