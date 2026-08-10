@@ -175,7 +175,7 @@ install_codex() {
         mkdir -p -- "$(dirname -- "$cfg")" || return 1
         (umask 077 && printf '%s\n' "$line" > "$cfg") || return 1
         printf 'hark: wrote %s\n' "$cfg"
-        printf 'Restart Codex to pick it up.\n'
+        printf 'That file is Codex config for every project. Restart Codex.\n'
         return 0
     fi
 
@@ -187,7 +187,11 @@ install_codex() {
     if [ -n "$existing" ]; then
         case "$existing" in
             *"$path"*)
+                # The likeliest way to land here is someone re-running this
+                # from a second project, expecting per-project setup. Say the
+                # thing that makes that expectation go away.
                 printf 'hark: already installed in %s\n' "$cfg"
+                printf 'That covers Codex everywhere. Nothing to do per project.\n'
                 return 0
                 ;;
         esac
@@ -204,7 +208,7 @@ install_codex() {
     cp -- "$cfg" "$cfg.bak" || return 1
     { printf '%s\n\n' "$line" && cat -- "$cfg.bak"; } > "$cfg" || return 1
     printf 'hark: added notify to %s (backup: %s.bak)\n' "$cfg" "$cfg"
-    printf 'Restart Codex to pick it up.\n'
+    printf 'That file is Codex config for every project. Restart Codex.\n'
 }
 
 # --------------------------------------------------------------------------

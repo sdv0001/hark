@@ -13,6 +13,14 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   that section and Codex stays silent. An existing `notify` is never
   overwritten. Not available in `hark.ps1` yet.
 
+### Changed
+- The Codex install instructions start from a clone at a stable path and say
+  that `notify` is global, so it is clear there is nothing to repeat per
+  project.
+- `integrations/codex.md` documents why hark cannot be installed as a Codex
+  plugin: Codex accepts the Claude Code manifest and reports success, but
+  `plugin_hooks` is a removed feature in 0.147, so no hook ever runs.
+
 ## [0.1.0] - 2026-08-10
 
 First release.

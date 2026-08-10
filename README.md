@@ -24,16 +24,23 @@ and ten small WAV files.
 /plugin install hark@hark
 ```
 
-**Codex** — one command, from the hark directory:
+**Codex** — clone it somewhere permanent, then let it install itself:
 
 ```sh
-sh scripts/hark.sh install codex
+git clone https://github.com/sdv0001/hark.git ~/.hark
+sh ~/.hark/scripts/hark.sh install codex
 ```
 
-That writes `notify` into `~/.codex/config.toml` with the right absolute path,
-above the first `[section]` — appended below one, TOML would read it as a key
-of that section and Codex would stay silent. Restart Codex afterwards. To write
-it by hand, or on Windows, see [integrations/codex.md](integrations/codex.md).
+Codex needs an absolute path to a program that stays put, which is why this one
+starts with a clone rather than a package. Both lines work from any directory,
+and you run them once: they write `notify` into `~/.codex/config.toml`, which
+is Codex's global config, so every project gets sounds — there is nothing to
+repeat per repository. Restart Codex afterwards.
+
+Do not install it into Codex with `codex plugin add` — Codex accepts the
+manifest, reports success, and then stays silent, because plugins there cannot
+carry hooks. To write the line by hand, or on Windows, see
+[integrations/codex.md](integrations/codex.md).
 
 **Gemini CLI** — a `hooks` block in `settings.json`: see
 [integrations/gemini.md](integrations/gemini.md).
