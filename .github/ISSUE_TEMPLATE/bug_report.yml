@@ -14,8 +14,8 @@ body:
     attributes:
       label: Output of the resolution table
       description: |
-        Run `sh scripts/chime.sh test` from the plugin directory
-        (or `powershell -File scripts/chime.ps1 test` on Windows) and paste the
+        Run `sh scripts/hark.sh test` from the plugin directory
+        (or `powershell -File scripts/hark.ps1 test` on Windows) and paste the
         output. It shows which file each role maps to, which is usually enough
         to spot the problem.
       render: shell
@@ -29,7 +29,7 @@ body:
   - type: textarea
     id: config
     attributes:
-      label: Your ~/.claude/chime.conf
+      label: Your ~/.claude/config
       description: Leave blank if you do not have one.
       render: shell
   - type: textarea

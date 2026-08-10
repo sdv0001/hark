@@ -46,7 +46,7 @@ jobs:
       - name: shellcheck
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
-          shellcheck --shell=sh scripts/chime.sh tests/test.sh
+          shellcheck --shell=sh scripts/hark.sh tests/test.sh
 
   sounds:
     name: bundled sounds match the generator

@@ -1,25 +1,25 @@
 <#
 .SYNOPSIS
-    Self-check for chime.ps1. Mirrors the assertions in tests/test.sh.
+    Self-check for hark.ps1. Mirrors the assertions in tests/test.sh.
 
 .DESCRIPTION
     Run with:  powershell -NoProfile -File tests/test.ps1
 
-    Like the sh suite, this observes `chime.ps1 test` output (which prints the
-    role -> file table before playing) and uses CHIME_PLAYER to stand in for
+    Like the sh suite, this observes `hark.ps1 test` output (which prints the
+    role -> file table before playing) and uses HARK_PLAYER to stand in for
     the audio device, so nothing is ever heard.
 #>
 
 $ErrorActionPreference = 'Stop'
 
 $Root = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
-$Chime = Join-Path $Root 'scripts/chime.ps1'
-$Tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("chime-" + [guid]::NewGuid())
+$Hark = Join-Path $Root 'scripts/hark.ps1'
+$Tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("hark-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $Tmp -Force | Out-Null
 
 # Never read the developer's real config, and never make a sound.
-$env:CHIME_CONF = Join-Path $Tmp 'absent.conf'
-$env:CHIME_PLAYER = 'Write-Output'
+$env:HARK_CONF = Join-Path $Tmp 'absent.conf'
+$env:HARK_PLAYER = 'Write-Output'
 
 $script:Pass = 0
 $script:Fail = 0
@@ -51,67 +51,67 @@ function Assert-Equals([string]$Name, [string]$Expected, [string]$Actual) {
     else { Test-No $Name $Expected $Actual }
 }
 
-function Invoke-Chime {
-    param([string[]]$ChimeArgs)
-    (& powershell -NoProfile -File $Chime @ChimeArgs 2>&1 | Out-String).Trim()
+function Invoke-Hark {
+    param([string[]]$HarkArgs)
+    (& powershell -NoProfile -File $Hark @HarkArgs 2>&1 | Out-String).Trim()
 }
 
-Write-Host 'chime.ps1 self-check'
+Write-Host 'hark.ps1 self-check'
 
 # --- presets --------------------------------------------------------------
-$env:CHIME_PRESET = 'default'
-$out = Invoke-Chime @('test')
+$env:HARK_PRESET = 'default'
+$out = Invoke-Hark @('test')
 Assert-Contains 'default/done maps to done.wav' 'done.wav' $out
 Assert-Contains 'default/error maps to error.wav' 'error.wav' $out
 
-$env:CHIME_PRESET = 'subtle'
-$out = Invoke-Chime @('test')
+$env:HARK_PRESET = 'subtle'
+$out = Invoke-Hark @('test')
 Assert-Contains 'subtle/done maps to subtle-done.wav' 'subtle-done.wav' $out
 
-$env:CHIME_PRESET = 'minimal'
-$out = Invoke-Chime @('test')
+$env:HARK_PRESET = 'minimal'
+$out = Invoke-Hark @('test')
 Assert-Contains 'minimal keeps done' 'done -> ' $out
 Assert-Missing 'minimal silences error' 'error -> ' $out
 
-$env:CHIME_PRESET = 'off'
-$out = Invoke-Chime @('test')
+$env:HARK_PRESET = 'off'
+$out = Invoke-Hark @('test')
 Assert-Equals 'off resolves nothing at all' '' $out
 
-$env:CHIME_PRESET = 'macos'
-$out = Invoke-Chime @('test')
+$env:HARK_PRESET = 'macos'
+$out = Invoke-Hark @('test')
 Assert-Contains 'macos/done is Glass' 'Glass.aiff' $out
 Assert-Missing 'macos has no bye sound' 'bye -> ' $out
 
-$env:CHIME_PRESET = 'nonsense'
-$out = Invoke-Chime @('test')
+$env:HARK_PRESET = 'nonsense'
+$out = Invoke-Hark @('test')
 Assert-Contains 'unknown preset behaves as default' 'done.wav' $out
 
 # --- config file ----------------------------------------------------------
-Remove-Item Env:\CHIME_PRESET
+Remove-Item Env:\HARK_PRESET
 $basic = Join-Path $Tmp 'basic.conf'
-"# a comment`nCHIME_PRESET=subtle`n" | Set-Content -LiteralPath $basic
-$env:CHIME_CONF = $basic
-$out = Invoke-Chime @('test')
+"# a comment`nHARK_PRESET=subtle`n" | Set-Content -LiteralPath $basic
+$env:HARK_CONF = $basic
+$out = Invoke-Hark @('test')
 Assert-Contains 'config file selects the preset' 'subtle-done.wav' $out
 
-$env:CHIME_PRESET = 'macos'
-$out = Invoke-Chime @('test')
+$env:HARK_PRESET = 'macos'
+$out = Invoke-Hark @('test')
 Assert-Contains 'environment beats config file' 'Glass.aiff' $out
-Remove-Item Env:\CHIME_PRESET
+Remove-Item Env:\HARK_PRESET
 
 $override = Join-Path $Tmp 'override.conf'
-"CHIME_PRESET=default`nCHIME_SOUND_DONE=C:\mine.wav`n" | Set-Content -LiteralPath $override
-$env:CHIME_CONF = $override
-$out = Invoke-Chime @('test')
+"HARK_PRESET=default`nHARK_SOUND_DONE=C:\mine.wav`n" | Set-Content -LiteralPath $override
+$env:HARK_CONF = $override
+$out = Invoke-Hark @('test')
 Assert-Contains 'per-role override wins' 'C:\mine.wav' $out
 
 # --- the config file must never be executed -------------------------------
 $canary = Join-Path $Tmp 'canary.txt'
 $evil = Join-Path $Tmp 'evil.conf'
-"CHIME_PRESET=default`nCHIME_VOLUME=`$(New-Item -ItemType File -Path '$canary')`n" |
+"HARK_PRESET=default`nHARK_VOLUME=`$(New-Item -ItemType File -Path '$canary')`n" |
     Set-Content -LiteralPath $evil
-$env:CHIME_CONF = $evil
-Invoke-Chime @('test') | Out-Null
+$env:HARK_CONF = $evil
+Invoke-Hark @('test') | Out-Null
 if (Test-Path -LiteralPath $canary) {
     Test-No 'config file is not executed' 'no canary file' 'canary was created'
 } else {
@@ -119,13 +119,26 @@ if (Test-Path -LiteralPath $canary) {
 }
 
 # --- never breaks the session ---------------------------------------------
-$env:CHIME_CONF = Join-Path $Tmp 'absent.conf'
-Invoke-Chime @('done') | Out-Null
+$env:HARK_CONF = Join-Path $Tmp 'absent.conf'
+Invoke-Hark @('done') | Out-Null
 Assert-Equals 'exit 0 on a known role' 0 $LASTEXITCODE
-Invoke-Chime @('not_a_role') | Out-Null
+Invoke-Hark @('not_a_role') | Out-Null
 Assert-Equals 'exit 0 on an unknown role' 0 $LASTEXITCODE
-Invoke-Chime @() | Out-Null
+Invoke-Hark @() | Out-Null
 Assert-Equals 'exit 0 with no argument' 0 $LASTEXITCODE
+
+# --- Codex payloads map to roles without a JSON parser --------------------
+$out = Invoke-Hark @('codex', '{"type":"agent-turn-complete","last-assistant-message":"ok"}')
+Assert-Contains 'codex turn-complete plays done' 'done.wav' $out
+
+$out = Invoke-Hark @('codex', '{"type":"approval-requested"}')
+Assert-Contains 'codex approval-requested plays attention' 'attention.wav' $out
+
+$out = Invoke-Hark @('codex', '{"type":"something-else"}')
+Assert-Equals 'unknown codex event is silent' '' $out
+
+$out = Invoke-Hark @('codex', 'not json at all')
+Assert-Equals 'malformed codex payload is silent' '' $out
 
 # --- bundled sounds -------------------------------------------------------
 $missing = @()

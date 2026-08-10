@@ -1,15 +1,15 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "claude-chime",
-  "description": "Sound notifications for Claude Code.",
+  "name": "hark",
+  "description": "Sound notifications for coding agents.",
   "owner": {
     "name": "Antonio Giordano",
     "url": "https://github.com/sdv0001"
   },
   "plugins": [
     {
-      "name": "claude-chime",
-      "description": "Plays a sound when Claude finishes, needs you, or hits an error. Five presets, works on macOS, Linux and Windows, no dependencies.",
+      "name": "hark",
+      "description": "Plays a sound when the agent finishes, needs you, or hits an error. Five presets, works on macOS, Linux and Windows, no dependencies.",
       "source": "./",
       "category": "productivity"
     }

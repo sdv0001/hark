@@ -5,8 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" done",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" done",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" done",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" done",
             "async": true,
             "timeout": 10
           }
@@ -18,8 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" attention",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" attention",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" attention",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" attention",
             "async": true,
             "timeout": 10
           }
@@ -31,8 +31,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" error",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" error",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" error",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" error",
             "async": true,
             "timeout": 10
           }
@@ -44,8 +44,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" subagent",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" subagent",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" subagent",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" subagent",
             "async": true,
             "timeout": 10
           }
@@ -57,8 +57,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" bye",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" bye",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" bye",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" bye",
             "async": true,
             "timeout": 10
           }

@@ -1,32 +1,37 @@
 #!/usr/bin/env sh
-# claude-chime — play a sound when Claude Code finishes or needs you.
+# hark — play a sound when a coding agent finishes or needs you.
 #
-#   chime.sh <role>     role: done | attention | error | subagent | bye
-#   chime.sh test       play every role of the active preset, in order
+#   hark.sh <role>          role: done | attention | error | subagent | bye
+#   hark.sh test            play every role of the active preset, in order
+#   hark.sh codex <json>    map a Codex notify payload to a role, then play it
+#
+# Nothing here knows which agent invoked it. Agents differ in how they signal;
+# they all agree on running a command. Each integration turns its own events
+# into one of the roles above and calls this script — see integrations/.
 #
 # Deliberately POSIX sh with no jq, no node, no python: this runs on whatever
-# shell the user happens to have. The hook payload arrives on stdin as JSON and
-# we ignore it completely — the role is passed as an argument instead, which is
-# the entire reason this script needs no JSON parser.
+# shell the user happens to have.
 #
 # Exits 0 in every path, including failure. A notifier that can break someone's
 # session is worse than no notifier.
 
-CHIME_ROOT=${CHIME_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)}
-SOUNDS_DIR="$CHIME_ROOT/sounds"
+HARK_ROOT=${HARK_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)}
+SOUNDS_DIR="$HARK_ROOT/sounds"
 ROLES="done attention error subagent bye"
 
 # --------------------------------------------------------------------------
-# config: built-in defaults < ~/.claude/chime.conf < environment
+# config: built-in defaults < config file < environment
 # --------------------------------------------------------------------------
 
 # Remember what the environment set, so the file can never override it.
-env_preset=$CHIME_PRESET
-env_volume=$CHIME_VOLUME
-env_player=$CHIME_PLAYER
+env_preset=$HARK_PRESET
+env_volume=$HARK_VOLUME
+env_player=$HARK_PLAYER
 
 read_conf() {
-    conf=${CHIME_CONF:-$HOME/.claude/chime.conf}
+    # XDG rather than a dotfile under any one agent's directory: hark belongs
+    # to none of them.
+    conf=${HARK_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/hark/config}
     [ -f "$conf" ] || return 0
 
     # Read the file directly rather than piping it: a pipe would put the loop
@@ -35,35 +40,35 @@ read_conf() {
         # Strip CR so a file saved on Windows still parses.
         value=$(printf '%s' "$value" | tr -d '\r' | sed 's/^"//; s/"$//')
         case "$key" in
-            CHIME_PRESET) CHIME_PRESET=$value ;;
-            CHIME_VOLUME) CHIME_VOLUME=$value ;;
-            CHIME_PLAYER) CHIME_PLAYER=$value ;;
-            CHIME_SOUND_DONE) CHIME_SOUND_DONE=$value ;;
-            CHIME_SOUND_ATTENTION) CHIME_SOUND_ATTENTION=$value ;;
-            CHIME_SOUND_ERROR) CHIME_SOUND_ERROR=$value ;;
-            CHIME_SOUND_SUBAGENT) CHIME_SOUND_SUBAGENT=$value ;;
-            CHIME_SOUND_BYE) CHIME_SOUND_BYE=$value ;;
+            HARK_PRESET) HARK_PRESET=$value ;;
+            HARK_VOLUME) HARK_VOLUME=$value ;;
+            HARK_PLAYER) HARK_PLAYER=$value ;;
+            HARK_SOUND_DONE) HARK_SOUND_DONE=$value ;;
+            HARK_SOUND_ATTENTION) HARK_SOUND_ATTENTION=$value ;;
+            HARK_SOUND_ERROR) HARK_SOUND_ERROR=$value ;;
+            HARK_SOUND_SUBAGENT) HARK_SOUND_SUBAGENT=$value ;;
+            HARK_SOUND_BYE) HARK_SOUND_BYE=$value ;;
             *) ;;  # comments, blanks and anything unrecognised: ignored
         esac
     done < "$conf"
 
-    # The config file is never sourced. It sits in a directory other tools
-    # write to, and a config file should not be able to execute code.
+    # The config file is never sourced. It is a settings file, and a settings
+    # file has no business executing code.
     return 0
 }
 
 read_conf
-[ -n "$env_preset" ] && CHIME_PRESET=$env_preset
-[ -n "$env_volume" ] && CHIME_VOLUME=$env_volume
-[ -n "$env_player" ] && CHIME_PLAYER=$env_player
-CHIME_PRESET=${CHIME_PRESET:-default}
-CHIME_VOLUME=${CHIME_VOLUME:-100}
+[ -n "$env_preset" ] && HARK_PRESET=$env_preset
+[ -n "$env_volume" ] && HARK_VOLUME=$env_volume
+[ -n "$env_player" ] && HARK_PLAYER=$env_player
+HARK_PRESET=${HARK_PRESET:-default}
+HARK_VOLUME=${HARK_VOLUME:-100}
 
-# The volume reaches awk and shell arithmetic, and it comes from a file a human
-# edits. Anything that is not 0-100 is a typo, not an intention.
-case "$CHIME_VOLUME" in
-    '' | *[!0-9]*) CHIME_VOLUME=100 ;;
-    *) [ "$CHIME_VOLUME" -gt 100 ] && CHIME_VOLUME=100 ;;
+# The volume reaches shell arithmetic, and it comes from a file a human edits.
+# Anything that is not 0-100 is a typo, not an intention.
+case "$HARK_VOLUME" in
+    '' | *[!0-9]*) HARK_VOLUME=100 ;;
+    *) [ "$HARK_VOLUME" -gt 100 ] && HARK_VOLUME=100 ;;
 esac
 
 # --------------------------------------------------------------------------
@@ -72,11 +77,11 @@ esac
 
 user_override() {
     case "$1" in
-        done) printf '%s' "$CHIME_SOUND_DONE" ;;
-        attention) printf '%s' "$CHIME_SOUND_ATTENTION" ;;
-        error) printf '%s' "$CHIME_SOUND_ERROR" ;;
-        subagent) printf '%s' "$CHIME_SOUND_SUBAGENT" ;;
-        bye) printf '%s' "$CHIME_SOUND_BYE" ;;
+        done) printf '%s' "$HARK_SOUND_DONE" ;;
+        attention) printf '%s' "$HARK_SOUND_ATTENTION" ;;
+        error) printf '%s' "$HARK_SOUND_ERROR" ;;
+        subagent) printf '%s' "$HARK_SOUND_SUBAGENT" ;;
+        bye) printf '%s' "$HARK_SOUND_BYE" ;;
     esac
 }
 
@@ -90,7 +95,7 @@ resolve_sound() {
         return 0
     fi
 
-    case "$CHIME_PRESET" in
+    case "$HARK_PRESET" in
         off)
             return 1
             ;;
@@ -105,7 +110,7 @@ resolve_sound() {
             ;;
         macos)
             # System sounds. Silent on other platforms by design: the files
-            # simply are not there, and play() skips what it cannot find.
+            # simply are not there, and play_file skips what it cannot find.
             case "$role" in
                 done) printf '%s' "/System/Library/Sounds/Glass.aiff" ;;
                 attention) printf '%s' "/System/Library/Sounds/Funk.aiff" ;;
@@ -117,6 +122,25 @@ resolve_sound() {
         default | *)
             printf '%s' "$SOUNDS_DIR/$role.wav"
             ;;
+    esac
+}
+
+# --------------------------------------------------------------------------
+# Codex hands its event type over as a JSON blob in argv, where every other
+# agent lets us pass a plain role. Rather than take on a JSON parser for one
+# field, match the field as a substring.
+#
+# ponytail: substring match, not parsing. A payload whose free-text message
+# quotes one of these type strings verbatim would be misread. Swap in jq (or
+# `codex notify --json`, if it ever grows one) if that stops being far-fetched.
+# --------------------------------------------------------------------------
+
+codex_role() {
+    compact=$(printf '%s' "$1" | tr -d '[:space:]')
+    case "$compact" in
+        *'"type":"agent-turn-complete"'*) printf 'done' ;;
+        *'"type":"approval-requested"'*) printf 'attention' ;;
+        *) return 1 ;;
     esac
 }
 
@@ -138,7 +162,7 @@ detect_player() {
 # arithmetic on purpose: piping the value through awk needs a layer of quoting
 # that is easy to get wrong and puts a config value inside an evaluated string.
 volume_float() {
-    printf '%d.%02d' "$((CHIME_VOLUME / 100))" "$((CHIME_VOLUME % 100))"
+    printf '%d.%02d' "$((HARK_VOLUME / 100))" "$((HARK_VOLUME % 100))"
 }
 
 # Named play_file, not play: sox ships a binary called `play`, and a shell
@@ -147,7 +171,7 @@ play_file() {
     file=$1
     [ -f "$file" ] || return 0  # e.g. the macos preset on Linux
 
-    player=${CHIME_PLAYER:-$(detect_player)}
+    player=${HARK_PLAYER:-$(detect_player)}
     [ -n "$player" ] || return 0
 
     # Order matters: *aplay, *paplay and *ffplay must be tested before the
@@ -159,13 +183,13 @@ play_file() {
             ;;
         *paplay)
             # PulseAudio volume is 0-65536.
-            paplay --volume="$((CHIME_VOLUME * 655))" "$file"
+            paplay --volume="$((HARK_VOLUME * 655))" "$file"
             ;;
         *ffplay)
-            ffplay -nodisp -autoexit -loglevel quiet -volume "$CHIME_VOLUME" "$file"
+            ffplay -nodisp -autoexit -loglevel quiet -volume "$HARK_VOLUME" "$file"
             ;;
         *aplay)
-            aplay -q "$file"  # no volume control; CHIME_VOLUME is ignored
+            aplay -q "$file"  # no volume control; HARK_VOLUME is ignored
             ;;
         *play)
             command play -q -v "$(volume_float)" "$file"
@@ -179,8 +203,8 @@ play_file() {
                 "(New-Object Media.SoundPlayer '$file').PlaySync()"
             ;;
         *)
-            # Anything else, including CHIME_PLAYER=echo, which is how the
-            # test suite checks sound selection without making a noise.
+            # Anything else, including HARK_PLAYER=echo, which is how the test
+            # suite checks sound selection without making a noise.
             "$player" "$file"
             ;;
     esac
@@ -190,7 +214,8 @@ play_file() {
 
 case "${1:-}" in
     "" | -h | --help)
-        echo "usage: chime.sh <done|attention|error|subagent|bye|test>" >&2
+        echo "usage: hark.sh <done|attention|error|subagent|bye|test>" >&2
+        echo "       hark.sh codex '<notify payload>'" >&2
         exit 0
         ;;
     test)
@@ -199,6 +224,11 @@ case "${1:-}" in
             echo "$role -> $file"
             play_file "$file"
         done
+        ;;
+    codex)
+        role=$(codex_role "${2:-}") || exit 0
+        file=$(resolve_sound "$role") || exit 0
+        play_file "$file"
         ;;
     *)
         file=$(resolve_sound "$1") || exit 0

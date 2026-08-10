@@ -1,49 +1,58 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    claude-chime - play a sound when Claude Code finishes or needs you.
+    hark - play a sound when a coding agent finishes or needs you.
 
 .DESCRIPTION
-    The Windows counterpart of scripts/chime.sh. Same config file, same
-    presets, same roles, so a user moving between machines gets the same
-    behaviour from the same ~/.claude/chime.conf.
+    The Windows counterpart of scripts/hark.sh. Same config file, same presets,
+    same roles, so a user moving between machines gets the same behaviour from
+    the same config.
 
     Media.SoundPlayer plays WAV only, which is why every bundled sound is WAV.
-    It has no volume control, so CHIME_VOLUME is accepted and ignored here.
+    It has no volume control, so HARK_VOLUME is accepted and ignored here.
 
     Exits 0 in every path. A notifier must never be able to break a session.
 
 .PARAMETER Role
-    done | attention | error | subagent | bye | test
+    done | attention | error | subagent | bye | test | codex
+
+.PARAMETER Payload
+    With the `codex` role, the notify payload Codex passes as a JSON argument.
 #>
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [string]$Role = ''
+    [string]$Role = '',
+
+    [Parameter(Position = 1)]
+    [string]$Payload = ''
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
 
-$ChimeRoot = if ($env:CHIME_ROOT) {
-    $env:CHIME_ROOT
+$HarkRoot = if ($env:HARK_ROOT) {
+    $env:HARK_ROOT
 } else {
     Split-Path -Parent (Split-Path -Parent $PSCommandPath)
 }
-$SoundsDir = Join-Path $ChimeRoot 'sounds'
+$SoundsDir = Join-Path $HarkRoot 'sounds'
 $AllRoles = @('done', 'attention', 'error', 'subagent', 'bye')
 
 # --------------------------------------------------------------------------
-# config: built-in defaults < ~/.claude/chime.conf < environment
+# config: built-in defaults < config file < environment
 # --------------------------------------------------------------------------
 
 $FileConfig = @{}
-# if/else rather than the ternary operator: the hook invokes `powershell`,
-# which on Windows is PowerShell 5.1, and `? :` only exists from 7 onwards.
+# if/else rather than the ternary operator: the Claude Code hook invokes
+# `powershell`, which on Windows is PowerShell 5.1, and `? :` only exists
+# from 7 onwards.
 if ($HOME) { $HomeDir = $HOME } else { $HomeDir = $env:USERPROFILE }
-if ($env:CHIME_CONF) {
-    $ConfPath = $env:CHIME_CONF
+if ($env:HARK_CONF) {
+    $ConfPath = $env:HARK_CONF
+} elseif ($env:XDG_CONFIG_HOME) {
+    $ConfPath = Join-Path $env:XDG_CONFIG_HOME 'hark/config'
 } else {
-    $ConfPath = Join-Path $HomeDir '.claude/chime.conf'
+    $ConfPath = Join-Path $HomeDir '.config/hark/config'
 }
 
 if (Test-Path -LiteralPath $ConfPath) {
@@ -52,14 +61,14 @@ if (Test-Path -LiteralPath $ConfPath) {
         if ($split -lt 1) { continue }  # comments, blanks, junk
         $key = $line.Substring(0, $split).Trim()
         $value = $line.Substring($split + 1).Trim().Trim('"')
-        # Allowlist, never Invoke-Expression: a config file must not run code.
-        if ($key -match '^CHIME_(PRESET|VOLUME|PLAYER|SOUND_(DONE|ATTENTION|ERROR|SUBAGENT|BYE))$') {
+        # Allowlist, never Invoke-Expression: a settings file must not run code.
+        if ($key -match '^HARK_(PRESET|VOLUME|PLAYER|SOUND_(DONE|ATTENTION|ERROR|SUBAGENT|BYE))$') {
             $FileConfig[$key] = $value
         }
     }
 }
 
-function Get-ChimeSetting {
+function Get-HarkSetting {
     param([string]$Name)
     $fromEnv = [Environment]::GetEnvironmentVariable($Name)
     if ($fromEnv) { return $fromEnv }
@@ -71,13 +80,13 @@ function Get-ChimeSetting {
 # which file does (preset, role) mean?  '' means stay silent.
 # --------------------------------------------------------------------------
 
-function Resolve-ChimeSound {
+function Resolve-HarkSound {
     param([string]$ForRole)
 
-    $override = Get-ChimeSetting "CHIME_SOUND_$($ForRole.ToUpper())"
+    $override = Get-HarkSetting "HARK_SOUND_$($ForRole.ToUpper())"
     if ($override) { return $override }
 
-    $preset = Get-ChimeSetting 'CHIME_PRESET'
+    $preset = Get-HarkSetting 'HARK_PRESET'
     if (-not $preset) { $preset = 'default' }
 
     switch ($preset) {
@@ -90,7 +99,7 @@ function Resolve-ChimeSound {
         }
         'subtle' { return (Join-Path $SoundsDir "subtle-$ForRole.wav") }
         'macos' {
-            # Paths that only exist on macOS. Invoke-ChimePlayer skips anything
+            # Paths that only exist on macOS. Invoke-HarkPlayer skips anything
             # missing, so this preset is simply silent here.
             switch ($ForRole) {
                 'done' { return '/System/Library/Sounds/Glass.aiff' }
@@ -104,16 +113,26 @@ function Resolve-ChimeSound {
     }
 }
 
+# Codex hands its event type over as JSON in argv. Substring match rather than
+# a parser, matching scripts/hark.sh — see the ponytail note there.
+function Get-CodexRole {
+    param([string]$Json)
+    $compact = $Json -replace '\s', ''
+    if ($compact -like '*"type":"agent-turn-complete"*') { return 'done' }
+    if ($compact -like '*"type":"approval-requested"*') { return 'attention' }
+    return ''
+}
+
 # --------------------------------------------------------------------------
 
-function Invoke-ChimePlayer {
+function Invoke-HarkPlayer {
     param([string]$File)
 
     if (-not $File) { return }
     if (-not (Test-Path -LiteralPath $File)) { return }
 
     # An explicit player is how the test suite observes playback without noise.
-    $player = Get-ChimeSetting 'CHIME_PLAYER'
+    $player = Get-HarkSetting 'HARK_PLAYER'
     if ($player) {
         & $player $File
         return
@@ -126,19 +145,24 @@ function Invoke-ChimePlayer {
 
 switch ($Role) {
     '' {
-        Write-Host 'usage: chime.ps1 <done|attention|error|subagent|bye|test>'
+        Write-Host 'usage: hark.ps1 <done|attention|error|subagent|bye|test>'
+        Write-Host '       hark.ps1 codex <notify payload>'
     }
     'test' {
         foreach ($r in $AllRoles) {
-            $file = Resolve-ChimeSound $r
+            $file = Resolve-HarkSound $r
             if ($file) {
                 Write-Output "$r -> $file"
-                Invoke-ChimePlayer $file
+                Invoke-HarkPlayer $file
             }
         }
     }
+    'codex' {
+        $mapped = Get-CodexRole $Payload
+        if ($mapped) { Invoke-HarkPlayer (Resolve-HarkSound $mapped) }
+    }
     default {
-        Invoke-ChimePlayer (Resolve-ChimeSound $Role)
+        Invoke-HarkPlayer (Resolve-HarkSound $Role)
     }
 }
 

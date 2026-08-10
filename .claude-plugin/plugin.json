@@ -1,21 +1,22 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
-  "name": "claude-chime",
+  "name": "hark",
   "version": "0.1.0",
-  "description": "Plays a sound when Claude Code finishes, needs your attention, or hits an error. Cross-platform, preset-based, no dependencies.",
+  "description": "Plays a sound when your coding agent finishes, needs your attention, or hits an error. Agent-neutral core, five presets, no dependencies.",
   "author": {
     "name": "Antonio Giordano",
     "url": "https://github.com/sdv0001"
   },
-  "homepage": "https://github.com/sdv0001/claude-chime",
-  "repository": "https://github.com/sdv0001/claude-chime",
+  "homepage": "https://github.com/sdv0001/hark",
+  "repository": "https://github.com/sdv0001/hark",
   "license": "MIT",
   "keywords": [
     "notification",
     "sound",
     "audio",
     "hooks",
-    "productivity"
+    "productivity",
+    "agent"
   ],
   "hooks": "./hooks/hooks.json",
   "commands": "./commands"

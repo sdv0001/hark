@@ -11,15 +11,21 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 First release.
 
 ### Added
-- Sound notifications for five Claude Code events: `Stop`, `Notification`,
-  `PostToolUseFailure`, `SubagentStop`, `SessionEnd`.
+- An agent-neutral core: `scripts/hark.sh <role>`, where role is one of
+  `done`, `attention`, `error`, `subagent`, `bye`.
+- Claude Code integration as an installable plugin, covering all five roles.
+- Codex integration through the `notify` program, covering `done` and
+  `attention`. Its JSON payload is matched as a substring rather than parsed,
+  so the runtime stays dependency-free.
+- Gemini CLI integration through `settings.json` hooks, covering `done`,
+  `attention` and `bye`.
 - Five presets: `default`, `subtle`, `macos`, `minimal`, `off`.
 - Ten bundled WAV sounds, generated from sine waves by `tools/gen_sounds.py`.
-- Configuration via `~/.claude/chime.conf` and environment variables, including
-  per-role sound overrides and a 0-100 volume knob.
-- `/chime` slash command for listing, switching, testing and silencing.
-- Windows support through `scripts/chime.ps1`, exercised on a Windows CI runner.
+- One shared config at `$XDG_CONFIG_HOME/hark/config`, with per-role sound
+  overrides and a 0-100 volume knob. Parsed against an allowlist, never sourced.
+- `/hark` slash command for Claude Code: list, set, volume, test, off, status.
+- Windows support through `scripts/hark.ps1`, exercised on a Windows CI runner.
 - Self-check suites for both shells that need no audio device.
 
-[Unreleased]: https://github.com/sdv0001/claude-chime/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/sdv0001/claude-chime/releases/tag/v0.1.0
+[Unreleased]: https://github.com/sdv0001/hark/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/sdv0001/hark/releases/tag/v0.1.0
