@@ -1,0 +1,40 @@
+name: Bug report
+description: A sound plays at the wrong time, or does not play at all.
+labels: [bug]
+body:
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.3 / Ubuntu 24.04 / Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: resolution
+    attributes:
+      label: Output of the resolution table
+      description: |
+        Run `sh scripts/chime.sh test` from the plugin directory
+        (or `powershell -File scripts/chime.ps1 test` on Windows) and paste the
+        output. It shows which file each role maps to, which is usually enough
+        to spot the problem.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: player
+    attributes:
+      label: Which audio player do you have?
+      description: "Output of: for p in afplay paplay aplay ffplay play; do command -v $p; done"
+  - type: textarea
+    id: config
+    attributes:
+      label: Your ~/.claude/chime.conf
+      description: Leave blank if you do not have one.
+      render: shell
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true

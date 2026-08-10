@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  posix:
+    name: tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the self-check
+        run: sh tests/test.sh
+      # dash is stricter than bash. The script claims to be POSIX sh; prove it.
+      - name: Run the self-check under dash
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update && sudo apt-get install -y dash
+          dash tests/test.sh
+
+  windows:
+    name: tests (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Windows PowerShell 5.1 on purpose: that is what the hook's
+      # commandWindows invokes, and it lacks syntax that pwsh 7 accepts.
+      - name: Run the self-check
+        shell: powershell
+        run: powershell -NoProfile -File tests/test.ps1
+
+  lint:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck --shell=sh scripts/chime.sh tests/test.sh
+
+  sounds:
+    name: bundled sounds match the generator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      # If someone edits a WAV by hand, or edits the generator and forgets to
+      # rerun it, the committed sounds stop being reproducible. Catch it here.
+      - name: Regenerate and diff
+        run: |
+          python3 tools/gen_sounds.py
+          git diff --exit-code -- sounds/

@@ -1,0 +1,69 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" done",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" done",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" attention",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" attention",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" error",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" error",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" subagent",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" subagent",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/chime.sh\" bye",
+            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\chime.ps1\" bye",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
