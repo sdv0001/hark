@@ -6,6 +6,13 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `hark.sh install codex`, which writes the `notify` line into
+  `~/.codex/config.toml` with the absolute path filled in. It prepends the
+  key, because appended below a `[section]` header TOML reads it as part of
+  that section and Codex stays silent. An existing `notify` is never
+  overwritten. Not available in `hark.ps1` yet.
+
 ## [0.1.0] - 2026-08-10
 
 First release.

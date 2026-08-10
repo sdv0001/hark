@@ -5,11 +5,27 @@ notification, with the payload as a single JSON argument.
 
 ## Setup
 
-Add to `~/.codex/config.toml`:
+```sh
+sh scripts/hark.sh install codex
+```
+
+It writes the line below into `~/.codex/config.toml` (or `$CODEX_HOME`),
+filling in this checkout's absolute path. It backs the file up to
+`config.toml.bak` first, and if the file already sets `notify` — yours or
+another tool's — it changes nothing and prints the line for you to merge by
+hand: Codex runs one notify program, and a second `notify` key is a TOML
+duplicate that would make Codex reject the whole file.
+
+By hand, the same thing:
 
 ```toml
 notify = ["/bin/sh", "/absolute/path/to/hark/scripts/hark.sh", "codex"]
 ```
+
+Put it above the first `[section]` header. `notify` is a top-level key, and a
+line appended to the end of the file belongs to whatever section precedes it —
+Codex reads it as `[that-section].notify`, which is not an error and not a
+notifier either. It just never makes a sound.
 
 Codex appends the payload, so the program actually runs as:
 
@@ -20,7 +36,8 @@ sh /absolute/path/to/hark/scripts/hark.sh codex '{"type":"agent-turn-complete",.
 Use an absolute path — `notify` is not resolved against your shell's `PATH`
 or your current directory.
 
-On Windows, point it at the PowerShell twin instead:
+On Windows there is no installer yet — `install` lives in `hark.sh` only. Point
+`notify` at the PowerShell twin by hand:
 
 ```toml
 notify = ["powershell", "-NoProfile", "-File", "C:\\path\\to\\hark\\scripts\\hark.ps1", "codex"]

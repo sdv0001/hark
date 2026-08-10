@@ -171,6 +171,47 @@ assert_equals "malformed codex payload is silent" "" "$out"
 sh "$HARK" codex > /dev/null 2>&1
 assert_equals "exit 0 when codex payload is missing" 0 $?
 
+# --- install codex --------------------------------------------------------
+# CODEX_HOME keeps every case in $TMP; the developer's own ~/.codex is never
+# a test subject.
+expected="notify = [\"/bin/sh\", \"$ROOT/scripts/hark.sh\", \"codex\"]"
+
+CODEX_HOME="$TMP/c1" sh "$HARK" install codex > /dev/null 2>&1
+assert_equals "install creates a missing config" "$expected" "$(cat "$TMP/c1/config.toml")"
+
+CODEX_HOME="$TMP/c1" sh "$HARK" install codex > /dev/null 2>&1
+assert_equals "second install exits 0" 0 $?
+assert_equals "second install adds no duplicate key" 1 \
+    "$(grep -c '^notify' "$TMP/c1/config.toml")"
+
+# The reason this subcommand exists: appended to the end of a real config the
+# key lands inside the last [section] and is silently ignored.
+mkdir -p "$TMP/c2"
+printf 'model = "x"\n\n[projects."/a"]\ntrust_level = "trusted"\n' > "$TMP/c2/config.toml"
+CODEX_HOME="$TMP/c2" sh "$HARK" install codex > /dev/null 2>&1
+n_notify=$(grep -n '^notify' "$TMP/c2/config.toml" | cut -d: -f1)
+n_section=$(grep -n '^\[' "$TMP/c2/config.toml" | head -n 1 | cut -d: -f1)
+if [ -n "$n_notify" ] && [ "$n_notify" -lt "$n_section" ]; then
+    ok "notify lands above the first [section]"
+else
+    no "notify lands above the first [section]" "notify < line $n_section" "line ${n_notify:-none}"
+fi
+assert_contains "the rest of the config survives" 'trust_level = "trusted"' \
+    "$(cat "$TMP/c2/config.toml")"
+assert_contains "the original is backed up" 'model = "x"' "$(cat "$TMP/c2/config.toml.bak")"
+
+# Someone else's notifier is not ours to overwrite.
+mkdir -p "$TMP/c3"
+printf 'notify = ["/usr/bin/someone-else"]\n' > "$TMP/c3/config.toml"
+out=$(CODEX_HOME="$TMP/c3" sh "$HARK" install codex 2>&1)
+assert_equals "install refuses to replace another notify" 1 $?
+assert_equals "the other notify is untouched" 'notify = ["/usr/bin/someone-else"]' \
+    "$(cat "$TMP/c3/config.toml")"
+assert_contains "refusing prints the line to paste" "$expected" "$out"
+
+sh "$HARK" install > /dev/null 2>&1
+assert_equals "install with no agent exits 2" 2 $?
+
 # --- every bundled sound the presets promise actually exists --------------
 missing=""
 for f in "done" attention error subagent bye; do

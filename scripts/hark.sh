@@ -150,6 +150,64 @@ codex_role() {
 }
 
 # --------------------------------------------------------------------------
+# install: write the agent's own config for it
+#
+# Only agents that need a hand-edited file get an installer. Claude Code has
+# a plugin mechanism and Gemini CLI takes a JSON block; Codex takes one
+# absolute path in a top-level TOML key, which is exactly the shape that is
+# annoying to type and easy to put in the wrong place.
+#
+# The line is prepended rather than appended. `notify` is top-level, so at the
+# end of the file it would land inside whatever [section] came last and be
+# read as `[that-section].notify` — no error, no sound, nothing to debug
+# against. The top of the file is top-level scope no matter what follows.
+# --------------------------------------------------------------------------
+
+install_codex() {
+    cfg=${CODEX_HOME:-$HOME/.codex}/config.toml
+
+    # A TOML basic string: escape backslashes before quotes, or the backslashes
+    # this adds would themselves be escaped.
+    path=$(printf '%s' "$HARK_ROOT/scripts/hark.sh" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    line="notify = [\"/bin/sh\", \"$path\", \"codex\"]"
+
+    if [ ! -f "$cfg" ]; then
+        mkdir -p -- "$(dirname -- "$cfg")" || return 1
+        (umask 077 && printf '%s\n' "$line" > "$cfg") || return 1
+        printf 'hark: wrote %s\n' "$cfg"
+        printf 'Restart Codex to pick it up.\n'
+        return 0
+    fi
+
+    # Any notify key anywhere is a reason to stop, not just one at top level.
+    # Codex honours a single notify program, and a second one added blindly
+    # would be a duplicate key: TOML calls that an error and Codex would then
+    # refuse the whole file. Refusing to edit is the recoverable failure.
+    existing=$(grep -n '^[[:space:]]*notify[[:space:]]*=' "$cfg" | head -n 1)
+    if [ -n "$existing" ]; then
+        case "$existing" in
+            *"$path"*)
+                printf 'hark: already installed in %s\n' "$cfg"
+                return 0
+                ;;
+        esac
+        printf 'hark: %s already sets notify, leaving it alone:\n' "$cfg" >&2
+        printf '  %s\n' "$existing" >&2
+        printf 'Codex runs one notify program. To use hark, replace that line with:\n' >&2
+        printf '  %s\n' "$line" >&2
+        return 1
+    fi
+
+    # The backup doubles as the scratch copy: the file cannot be read and
+    # rewritten in one pass, and redirecting into the original rather than
+    # moving over it keeps its permissions, which are commonly 0600 here.
+    cp -- "$cfg" "$cfg.bak" || return 1
+    { printf '%s\n\n' "$line" && cat -- "$cfg.bak"; } > "$cfg" || return 1
+    printf 'hark: added notify to %s (backup: %s.bak)\n' "$cfg" "$cfg"
+    printf 'Restart Codex to pick it up.\n'
+}
+
+# --------------------------------------------------------------------------
 # playback
 # --------------------------------------------------------------------------
 
@@ -221,7 +279,23 @@ case "${1:-}" in
     "" | -h | --help)
         echo "usage: hark.sh <done|attention|error|subagent|bye|test>" >&2
         echo "       hark.sh codex '<notify payload>'" >&2
+        echo "       hark.sh install codex" >&2
         exit 0
+        ;;
+    install)
+        case "${2:-}" in
+            codex) install_codex ;;
+            *)
+                echo "usage: hark.sh install codex" >&2
+                echo "Claude Code installs itself: /plugin install hark@hark" >&2
+                echo "Gemini CLI needs a hooks block: see integrations/gemini.md" >&2
+                exit 2
+                ;;
+        esac
+        # The only path here that reports failure. The exit-0 rule protects
+        # agent sessions from a broken notifier; this one is a human at a
+        # prompt, and "it did nothing" has to be distinguishable from "done".
+        exit $?
         ;;
     test)
         for role in $ROLES; do

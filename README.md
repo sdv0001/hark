@@ -24,11 +24,16 @@ and ten small WAV files.
 /plugin install hark@hark
 ```
 
-**Codex** — one line in `~/.codex/config.toml`:
+**Codex** — one command, from the hark directory:
 
-```toml
-notify = ["/bin/sh", "/absolute/path/to/hark/scripts/hark.sh", "codex"]
+```sh
+sh scripts/hark.sh install codex
 ```
+
+That writes `notify` into `~/.codex/config.toml` with the right absolute path,
+above the first `[section]` — appended below one, TOML would read it as a key
+of that section and Codex would stay silent. Restart Codex afterwards. To write
+it by hand, or on Windows, see [integrations/codex.md](integrations/codex.md).
 
 **Gemini CLI** — a `hooks` block in `settings.json`: see
 [integrations/gemini.md](integrations/gemini.md).
