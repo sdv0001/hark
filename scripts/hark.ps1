@@ -115,11 +115,15 @@ function Resolve-HarkSound {
 
 # Codex hands its event type over as JSON in argv. Substring match rather than
 # a parser, matching scripts/hark.sh — see the ponytail note there.
+#
+# Quotes are stripped as well as whitespace: PowerShell's -File parameter
+# parsing removes the double quotes from an argument, so this function is
+# handed {type:agent-turn-complete} rather than {"type":"agent-turn-complete"}.
 function Get-CodexRole {
     param([string]$Json)
-    $compact = $Json -replace '\s', ''
-    if ($compact -like '*"type":"agent-turn-complete"*') { return 'done' }
-    if ($compact -like '*"type":"approval-requested"*') { return 'attention' }
+    $compact = $Json -replace '[\s"]', ''
+    if ($compact -like '*type:agent-turn-complete*') { return 'done' }
+    if ($compact -like '*type:approval-requested*') { return 'attention' }
     return ''
 }
 

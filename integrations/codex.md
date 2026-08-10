@@ -20,6 +20,16 @@ sh /absolute/path/to/hark/scripts/hark.sh codex '{"type":"agent-turn-complete",.
 Use an absolute path — `notify` is not resolved against your shell's `PATH`
 or your current directory.
 
+On Windows, point it at the PowerShell twin instead:
+
+```toml
+notify = ["powershell", "-NoProfile", "-File", "C:\\path\\to\\hark\\scripts\\hark.ps1", "codex"]
+```
+
+PowerShell's `-File` parsing strips the double quotes out of the payload
+argument, so hark matches the event type with quotes removed. Both the quoted
+and unquoted forms work, and CI covers both.
+
 ## Coverage
 
 | Codex event | Role |

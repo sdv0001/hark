@@ -130,16 +130,21 @@ resolve_sound() {
 # agent lets us pass a plain role. Rather than take on a JSON parser for one
 # field, match the field as a substring.
 #
+# Quotes are stripped before matching, not just whitespace: when the payload
+# reaches a PowerShell entry point as an argument, PowerShell's -File parameter
+# parsing eats the double quotes, and {"type":"x"} arrives as {type:x}. Both
+# forms have to match or Codex is silent on Windows.
+#
 # ponytail: substring match, not parsing. A payload whose free-text message
-# quotes one of these type strings verbatim would be misread. Swap in jq (or
+# contains `type:agent-turn-complete` would be misread. Swap in jq (or
 # `codex notify --json`, if it ever grows one) if that stops being far-fetched.
 # --------------------------------------------------------------------------
 
 codex_role() {
-    compact=$(printf '%s' "$1" | tr -d '[:space:]')
+    compact=$(printf '%s' "$1" | tr -d '[:space:]"')
     case "$compact" in
-        *'"type":"agent-turn-complete"'*) printf 'done' ;;
-        *'"type":"approval-requested"'*) printf 'attention' ;;
+        *type:agent-turn-complete*) printf 'done' ;;
+        *type:approval-requested*) printf 'attention' ;;
         *) return 1 ;;
     esac
 }

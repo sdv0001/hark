@@ -157,6 +157,11 @@ assert_equals "codex approval-requested plays attention" "$ROOT/sounds/attention
 out=$(HARK_PLAYER='echo' sh "$HARK" codex '{ "type" : "agent-turn-complete" }')
 assert_equals "codex payload with spaces still matches" "$ROOT/sounds/done.wav" "$out"
 
+# PowerShell's -File parsing strips the quotes from an argument, so the
+# unquoted form has to match too or Codex is silent on Windows.
+out=$(HARK_PLAYER='echo' sh "$HARK" codex '{type:agent-turn-complete}')
+assert_equals "codex payload with quotes stripped still matches" "$ROOT/sounds/done.wav" "$out"
+
 out=$(HARK_PLAYER='echo' sh "$HARK" codex '{"type":"something-else"}')
 assert_equals "unknown codex event is silent" "" "$out"
 
