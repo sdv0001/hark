@@ -104,6 +104,18 @@ out=$(HARK_CONF="$TMP/override.conf" sh "$HARK" test)
 assert_contains "per-role override wins" "done -> /tmp/mine.wav" "$out"
 assert_contains "other roles keep the preset" "error.wav" "$out"
 
+config_sound="$TMP/from-config.wav"
+env_sound="$TMP/from-env.wav"
+: > "$config_sound"
+: > "$env_sound"
+printf 'HARK_SOUND_DONE=%s\n' "$config_sound" > "$TMP/sound-env.conf"
+out=$(HARK_CONF="$TMP/sound-env.conf" HARK_SOUND_DONE="$env_sound" sh "$HARK" test)
+assert_contains "sound environment override beats config" "done -> $env_sound" "$out"
+
+printf 'HARK_PRESET=subtle' > "$TMP/no-newline.conf"
+out=$(HARK_CONF="$TMP/no-newline.conf" sh "$HARK" test)
+assert_contains "final config line needs no newline" "subtle-done.wav" "$out"
+
 # Windows line endings must not leak into the value.
 printf 'HARK_PRESET=subtle\r\n' > "$TMP/crlf.conf"
 out=$(HARK_CONF="$TMP/crlf.conf" sh "$HARK" test)
@@ -126,12 +138,36 @@ assert_contains "garbage volume still plays" "sounds/done.wav" "$out"
 out=$(HARK_VOLUME=9999 HARK_PLAYER='echo' sh "$HARK" "done" 2>&1)
 assert_contains "out-of-range volume still plays" "sounds/done.wav" "$out"
 
+for volume in 08 0009 999999999999999999999999999999999999; do
+    out=$(HARK_VOLUME="$volume" HARK_PLAYER=echo sh "$HARK" "done" 2>&1)
+    assert_equals "numeric volume $volume is safe" "$ROOT/sounds/done.wav" "$out"
+done
+
 # --- playback path --------------------------------------------------------
 out=$(HARK_PLAYER='echo' sh "$HARK" "done")
 assert_equals "player receives the resolved file" "$ROOT/sounds/done.wav" "$out"
 
 out=$(HARK_PRESET=off HARK_PLAYER='echo' sh "$HARK" "done")
 assert_equals "off plays nothing" "" "$out"
+
+mkdir -p "$TMP/bin"
+player="$TMP/bin/custom-play"
+printf '#!/bin/sh\nprintf "custom-play:%%s\\n" "$*"\n' > "$player"
+printf '#!/bin/sh\nprintf "wrong-player\\n"\n' > "$TMP/bin/play"
+chmod +x "$player" "$TMP/bin/play"
+out=$(PATH="$TMP/bin:$PATH" HARK_PLAYER="$player" sh "$HARK" "done")
+assert_contains "explicit play path is invoked" "custom-play:" "$out"
+
+ps_player="$TMP/bin/fake-powershell"
+# shellcheck disable=SC2016  # variables must expand in the generated fake.
+printf '#!/bin/sh\nprintf "file=%%s\\n" "$HARK_AUDIO_FILE"\nprintf "args=%%s\\n" "$*"\n' > "$ps_player"
+chmod +x "$ps_player"
+quoted="$TMP/a file with 'quote.wav"
+: > "$quoted"
+out=$(HARK_SOUND_DONE="$quoted" HARK_PLAYER="$ps_player" sh "$HARK" "done")
+assert_contains "PowerShell fallback receives path through environment" "file=$quoted" "$out"
+args=$(printf '%s' "$out" | sed -n 's/^args=//p')
+assert_missing "PowerShell source does not contain the path" "$quoted" "$args"
 
 # --- never breaks the session ---------------------------------------------
 HARK_PLAYER='echo' sh "$HARK" "done" > /dev/null 2>&1
@@ -143,74 +179,12 @@ assert_equals "exit 0 on an unknown role" 0 $?
 sh "$HARK" > /dev/null 2>&1
 assert_equals "exit 0 with no argument" 0 $?
 
+out=$(sh "$HARK" --help 2>&1)
+assert_missing "help omits legacy codex mode" "codex" "$out"
+assert_missing "help omits legacy installer" "install" "$out"
+
 HARK_PLAYER=/does/not/exist sh "$HARK" "done" > /dev/null 2>&1
 assert_equals "exit 0 when the player is missing" 0 $?
-
-# --- Codex payloads map to roles without a JSON parser --------------------
-out=$(HARK_PLAYER='echo' sh "$HARK" codex '{"type":"agent-turn-complete","last-assistant-message":"ok"}')
-assert_equals "codex turn-complete plays done" "$ROOT/sounds/done.wav" "$out"
-
-out=$(HARK_PLAYER='echo' sh "$HARK" codex '{"type":"approval-requested"}')
-assert_equals "codex approval-requested plays attention" "$ROOT/sounds/attention.wav" "$out"
-
-# Whitespace between the key and the value must not defeat the match.
-out=$(HARK_PLAYER='echo' sh "$HARK" codex '{ "type" : "agent-turn-complete" }')
-assert_equals "codex payload with spaces still matches" "$ROOT/sounds/done.wav" "$out"
-
-# PowerShell's -File parsing strips the quotes from an argument, so the
-# unquoted form has to match too or Codex is silent on Windows.
-out=$(HARK_PLAYER='echo' sh "$HARK" codex '{type:agent-turn-complete}')
-assert_equals "codex payload with quotes stripped still matches" "$ROOT/sounds/done.wav" "$out"
-
-out=$(HARK_PLAYER='echo' sh "$HARK" codex '{"type":"something-else"}')
-assert_equals "unknown codex event is silent" "" "$out"
-
-out=$(HARK_PLAYER='echo' sh "$HARK" codex 'not json at all')
-assert_equals "malformed codex payload is silent" "" "$out"
-
-sh "$HARK" codex > /dev/null 2>&1
-assert_equals "exit 0 when codex payload is missing" 0 $?
-
-# --- install codex --------------------------------------------------------
-# CODEX_HOME keeps every case in $TMP; the developer's own ~/.codex is never
-# a test subject.
-expected="notify = [\"/bin/sh\", \"$ROOT/scripts/hark.sh\", \"codex\"]"
-
-CODEX_HOME="$TMP/c1" sh "$HARK" install codex > /dev/null 2>&1
-assert_equals "install creates a missing config" "$expected" "$(cat "$TMP/c1/config.toml")"
-
-CODEX_HOME="$TMP/c1" sh "$HARK" install codex > /dev/null 2>&1
-assert_equals "second install exits 0" 0 $?
-assert_equals "second install adds no duplicate key" 1 \
-    "$(grep -c '^notify' "$TMP/c1/config.toml")"
-
-# The reason this subcommand exists: appended to the end of a real config the
-# key lands inside the last [section] and is silently ignored.
-mkdir -p "$TMP/c2"
-printf 'model = "x"\n\n[projects."/a"]\ntrust_level = "trusted"\n' > "$TMP/c2/config.toml"
-CODEX_HOME="$TMP/c2" sh "$HARK" install codex > /dev/null 2>&1
-n_notify=$(grep -n '^notify' "$TMP/c2/config.toml" | cut -d: -f1)
-n_section=$(grep -n '^\[' "$TMP/c2/config.toml" | head -n 1 | cut -d: -f1)
-if [ -n "$n_notify" ] && [ "$n_notify" -lt "$n_section" ]; then
-    ok "notify lands above the first [section]"
-else
-    no "notify lands above the first [section]" "notify < line $n_section" "line ${n_notify:-none}"
-fi
-assert_contains "the rest of the config survives" 'trust_level = "trusted"' \
-    "$(cat "$TMP/c2/config.toml")"
-assert_contains "the original is backed up" 'model = "x"' "$(cat "$TMP/c2/config.toml.bak")"
-
-# Someone else's notifier is not ours to overwrite.
-mkdir -p "$TMP/c3"
-printf 'notify = ["/usr/bin/someone-else"]\n' > "$TMP/c3/config.toml"
-out=$(CODEX_HOME="$TMP/c3" sh "$HARK" install codex 2>&1)
-assert_equals "install refuses to replace another notify" 1 $?
-assert_equals "the other notify is untouched" 'notify = ["/usr/bin/someone-else"]' \
-    "$(cat "$TMP/c3/config.toml")"
-assert_contains "refusing prints the line to paste" "$expected" "$out"
-
-sh "$HARK" install > /dev/null 2>&1
-assert_equals "install with no agent exits 2" 2 $?
 
 # --- every bundled sound the presets promise actually exists --------------
 missing=""
