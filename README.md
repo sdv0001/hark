@@ -2,6 +2,8 @@
 
 # hark
 
+<img width="1280" height="640" alt="social" src="https://github.com/user-attachments/assets/f8a75612-319f-4fd1-b158-6a90189d56e1" />
+
 [![CI](https://github.com/sdv0001/hark/actions/workflows/ci.yml/badge.svg)](https://github.com/sdv0001/hark/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
