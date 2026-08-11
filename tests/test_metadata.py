@@ -19,14 +19,14 @@ class PluginContracts(unittest.TestCase):
     def test_codex_manifest_uses_default_discovery(self):
         manifest = load(".codex-plugin/plugin.json")
         self.assertEqual("hark", manifest["name"])
+        self.assertEqual("0.2.0", manifest["version"])
         self.assertNotIn("hooks", manifest)
         self.assertIn("interface", manifest)
 
     def test_claude_manifest_selects_its_hook_file(self):
-        self.assertEqual(
-            "./hooks/claude.json",
-            load(".claude-plugin/plugin.json")["hooks"],
-        )
+        manifest = load(".claude-plugin/plugin.json")
+        self.assertEqual("0.2.0", manifest["version"])
+        self.assertEqual("./hooks/claude.json", manifest["hooks"])
 
     def test_codex_event_roles(self):
         hooks = load("hooks/hooks.json")
@@ -43,6 +43,7 @@ class PluginContracts(unittest.TestCase):
             self.assertIn("PLUGIN_ROOT", command["command"])
             self.assertIn(role, command["commandWindows"])
             self.assertNotIn("async", command)
+        self.assertEqual(3, commands(hooks, "SessionEnd")[0]["timeout"])
 
     def test_claude_event_roles_use_documented_fields(self):
         hooks = load("hooks/claude.json")

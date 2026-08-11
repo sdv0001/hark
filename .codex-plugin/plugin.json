@@ -1,6 +1,6 @@
 {
   "name": "hark",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Short sound notifications when Codex finishes, needs attention, or completes background work.",
   "author": {
     "name": "Antonio Giordano",

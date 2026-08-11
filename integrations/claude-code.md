@@ -37,8 +37,8 @@ this directory. Claude Code's manifest selects `hooks/claude.json`, and
 `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin root — which is where `scripts/`
 lives. Codex separately discovers `hooks/hooks.json` from that same root.
 
-The other agents are configured by hand from a snippet, so they have no such
-constraint and live here.
+Gemini CLI is configured by hand from a snippet, so its guide has no such
+filesystem constraint and lives under `integrations/`.
 
 ## Checking it works
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "hark",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Plays a sound when your coding agent finishes, needs your attention, or hits an error. Agent-neutral core, five presets, no dependencies.",
   "author": {
     "name": "Antonio Giordano",

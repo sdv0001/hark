@@ -43,7 +43,7 @@
             "type": "command",
             "command": "sh \"${PLUGIN_ROOT}/scripts/hark.sh\" bye >/dev/null 2>&1 &",
             "commandWindows": "Start-Process -FilePath powershell -WindowStyle Hidden -WorkingDirectory $env:PLUGIN_ROOT -ArgumentList '-NoProfile','-File','scripts\\hark.ps1','bye'",
-            "timeout": 10
+            "timeout": 3
           }
         ]
       }
