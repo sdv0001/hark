@@ -5,35 +5,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" done",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" done",
-            "async": true,
+            "command": "sh \"${PLUGIN_ROOT}/scripts/hark.sh\" done >/dev/null 2>&1 &",
+            "commandWindows": "Start-Process -FilePath powershell -WindowStyle Hidden -WorkingDirectory $env:PLUGIN_ROOT -ArgumentList '-NoProfile','-File','scripts\\hark.ps1','done'",
             "timeout": 10
           }
         ]
       }
     ],
-    "Notification": [
+    "PermissionRequest": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" attention",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" attention",
-            "async": true,
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" error",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" error",
-            "async": true,
+            "command": "sh \"${PLUGIN_ROOT}/scripts/hark.sh\" attention >/dev/null 2>&1 &",
+            "commandWindows": "Start-Process -FilePath powershell -WindowStyle Hidden -WorkingDirectory $env:PLUGIN_ROOT -ArgumentList '-NoProfile','-File','scripts\\hark.ps1','attention'",
             "timeout": 10
           }
         ]
@@ -44,9 +29,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" subagent",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" subagent",
-            "async": true,
+            "command": "sh \"${PLUGIN_ROOT}/scripts/hark.sh\" subagent >/dev/null 2>&1 &",
+            "commandWindows": "Start-Process -FilePath powershell -WindowStyle Hidden -WorkingDirectory $env:PLUGIN_ROOT -ArgumentList '-NoProfile','-File','scripts\\hark.ps1','subagent'",
             "timeout": 10
           }
         ]
@@ -57,9 +41,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hark.sh\" bye",
-            "commandWindows": "powershell -NoProfile -File \"$env:CLAUDE_PLUGIN_ROOT\\scripts\\hark.ps1\" bye",
-            "async": true,
+            "command": "sh \"${PLUGIN_ROOT}/scripts/hark.sh\" bye >/dev/null 2>&1 &",
+            "commandWindows": "Start-Process -FilePath powershell -WindowStyle Hidden -WorkingDirectory $env:PLUGIN_ROOT -ArgumentList '-NoProfile','-File','scripts\\hark.ps1','bye'",
             "timeout": 10
           }
         ]

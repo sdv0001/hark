@@ -18,6 +18,6 @@
     "productivity",
     "agent"
   ],
-  "hooks": "./hooks/hooks.json",
+  "hooks": "./hooks/claude.json",
   "commands": "./commands"
 }

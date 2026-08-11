@@ -1,0 +1,28 @@
+{
+  "name": "hark",
+  "version": "0.1.0",
+  "description": "Short sound notifications when Codex finishes, needs attention, or completes background work.",
+  "author": {
+    "name": "Antonio Giordano",
+    "url": "https://github.com/sdv0001"
+  },
+  "homepage": "https://github.com/sdv0001/hark",
+  "repository": "https://github.com/sdv0001/hark",
+  "license": "MIT",
+  "keywords": [
+    "notification",
+    "sound",
+    "hooks",
+    "productivity",
+    "agent"
+  ],
+  "interface": {
+    "displayName": "hark",
+    "shortDescription": "Hear when Codex needs you.",
+    "longDescription": "Plays short local sounds when Codex finishes a turn, requests permission, completes a subagent, or ends a session.",
+    "developerName": "Antonio Giordano",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Configure hark sound notifications."
+  }
+}
