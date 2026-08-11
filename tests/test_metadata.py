@@ -62,6 +62,13 @@ class PluginContracts(unittest.TestCase):
             self.assertTrue(command["async"])
             self.assertNotIn("commandWindows", command)
 
+    def test_runtime_has_no_legacy_codex_path(self):
+        legacy = ("Get-CodexRole", "codex_role", "install_codex", "notify payload")
+        for path in ("scripts/hark.sh", "scripts/hark.ps1"):
+            source = (ROOT / path).read_text(encoding="utf-8")
+            for marker in legacy:
+                self.assertNotIn(marker, source, f"{marker!r} remains in {path}")
+
 
 if __name__ == "__main__":
     unittest.main()

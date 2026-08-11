@@ -14,18 +14,12 @@
     Exits 0 in every path. A notifier must never be able to break a session.
 
 .PARAMETER Role
-    done | attention | error | subagent | bye | test | codex
-
-.PARAMETER Payload
-    With the `codex` role, the notify payload Codex passes as a JSON argument.
+    done | attention | error | subagent | bye | test
 #>
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [string]$Role = '',
-
-    [Parameter(Position = 1)]
-    [string]$Payload = ''
+    [string]$Role = ''
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -113,22 +107,6 @@ function Resolve-HarkSound {
     }
 }
 
-# Codex hands its event type over as JSON in argv. Substring match rather than
-# a parser, matching scripts/hark.sh — see the ponytail note there.
-#
-# Quotes are stripped as well as whitespace: PowerShell's -File parameter
-# parsing removes the double quotes from an argument, so this function is
-# handed {type:agent-turn-complete} rather than {"type":"agent-turn-complete"}.
-function Get-CodexRole {
-    param([string]$Json)
-    $compact = $Json -replace '[\s"]', ''
-    if ($compact -like '*type:agent-turn-complete*') { return 'done' }
-    if ($compact -like '*type:approval-requested*') { return 'attention' }
-    return ''
-}
-
-# --------------------------------------------------------------------------
-
 function Invoke-HarkPlayer {
     param([string]$File)
 
@@ -150,7 +128,6 @@ function Invoke-HarkPlayer {
 switch ($Role) {
     '' {
         Write-Host 'usage: hark.ps1 <done|attention|error|subagent|bye|test>'
-        Write-Host '       hark.ps1 codex <notify payload>'
     }
     'test' {
         foreach ($r in $AllRoles) {
@@ -160,10 +137,6 @@ switch ($Role) {
                 Invoke-HarkPlayer $file
             }
         }
-    }
-    'codex' {
-        $mapped = Get-CodexRole $Payload
-        if ($mapped) { Invoke-HarkPlayer (Resolve-HarkSound $mapped) }
     }
     default {
         Invoke-HarkPlayer (Resolve-HarkSound $Role)

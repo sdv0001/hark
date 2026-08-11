@@ -126,19 +126,9 @@ Invoke-Hark @('not_a_role') | Out-Null
 Assert-Equals 'exit 0 on an unknown role' 0 $LASTEXITCODE
 Invoke-Hark @() | Out-Null
 Assert-Equals 'exit 0 with no argument' 0 $LASTEXITCODE
-
-# --- Codex payloads map to roles without a JSON parser --------------------
-$out = Invoke-Hark @('codex', '{"type":"agent-turn-complete","last-assistant-message":"ok"}')
-Assert-Contains 'codex turn-complete plays done' 'done.wav' $out
-
-$out = Invoke-Hark @('codex', '{"type":"approval-requested"}')
-Assert-Contains 'codex approval-requested plays attention' 'attention.wav' $out
-
-$out = Invoke-Hark @('codex', '{"type":"something-else"}')
-Assert-Equals 'unknown codex event is silent' '' $out
-
-$out = Invoke-Hark @('codex', 'not json at all')
-Assert-Equals 'malformed codex payload is silent' '' $out
+$out = Invoke-Hark @()
+Assert-Missing 'help omits legacy codex mode' 'codex' $out
+Assert-Missing 'help omits legacy installer' 'install' $out
 
 # --- bundled sounds -------------------------------------------------------
 $missing = @()
