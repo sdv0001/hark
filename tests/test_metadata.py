@@ -80,6 +80,13 @@ class PluginContracts(unittest.TestCase):
             self.assertNotIn("hark.sh install codex", document)
             self.assertNotIn("plugins cannot contribute hooks", document)
 
+    def test_ci_uses_current_node24_actions(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        self.assertNotIn("actions/checkout@v4", workflow)
+        self.assertNotIn("actions/setup-python@v5", workflow)
+        self.assertIn("actions/checkout@v7", workflow)
+        self.assertIn("actions/setup-python@v7", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,7 +17,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run the self-check
         run: sh tests/test.sh
       - name: Validate plugin metadata
@@ -31,7 +31,7 @@ jobs:
     name: tests (windows-latest)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Windows PowerShell 5.1 on purpose: that is what the hook's
       # commandWindows invokes, and it lacks syntax that pwsh 7 accepts.
       - name: Run the self-check
@@ -42,7 +42,7 @@ jobs:
     name: shellcheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: shellcheck
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
@@ -52,8 +52,8 @@ jobs:
     name: bundled sounds match the generator
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
       # If someone edits a WAV by hand, or edits the generator and forgets to

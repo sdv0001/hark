@@ -16,6 +16,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   playback core.
 - Plugin manifests advance to version 0.2.0 so installed copies can update
   cleanly from the initial release.
+- CI uses the current Node 24-based GitHub Actions releases.
 - Claude Code attention sounds use `PermissionRequest` instead of every
   `Notification`; `StopFailure` now maps to `error`.
 
