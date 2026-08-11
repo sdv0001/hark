@@ -20,12 +20,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run the self-check
         run: sh tests/test.sh
+      - name: Validate plugin metadata
+        run: python3 tests/test_metadata.py
       # dash is stricter than bash. The script claims to be POSIX sh; prove it.
       - name: Run the self-check under dash
         if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update && sudo apt-get install -y dash
-          dash tests/test.sh
+        run: dash tests/test.sh
 
   windows:
     name: tests (windows-latest)

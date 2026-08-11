@@ -26,23 +26,17 @@ and ten small WAV files.
 /plugin install hark@hark
 ```
 
-**Codex** — clone it somewhere permanent, then let it install itself:
+**Codex 0.147+** — installs as a native plugin with native hooks:
 
 ```sh
-git clone https://github.com/sdv0001/hark.git ~/.hark
-sh ~/.hark/scripts/hark.sh install codex
+codex plugin marketplace add sdv0001/hark
+codex plugin add hark@hark
 ```
 
-Codex needs an absolute path to a program that stays put, which is why this one
-starts with a clone rather than a package. Both lines work from any directory,
-and you run them once: they write `notify` into `~/.codex/config.toml`, which
-is Codex's global config, so every project gets sounds — there is nothing to
-repeat per repository. Restart Codex afterwards.
-
-Do not install it into Codex with `codex plugin add` — Codex accepts the
-manifest, reports success, and then stays silent, because plugins there cannot
-carry hooks. To write the line by hand, or on Windows, see
-[integrations/codex.md](integrations/codex.md).
+Restart Codex, then open `/hooks` to inspect and trust the installed hooks.
+Upgrading from the old integration? Remove hark's top-level `notify = [...]`
+entry from `~/.codex/config.toml`; the plugin neither needs nor reads it. See
+[integrations/codex.md](integrations/codex.md) for coverage and troubleshooting.
 
 **Gemini CLI** — a `hooks` block in `settings.json`: see
 [integrations/gemini.md](integrations/gemini.md).
@@ -60,8 +54,8 @@ many as it actually emits:
 | `done` | Finished its turn, your move | ✅ | ✅ | ✅ |
 | `attention` | Blocked on you — a prompt, a question | ✅ | ✅ | ✅ |
 | `error` | A tool call failed | ✅ | — | — |
-| `subagent` | A background agent finished | ✅ | — | — |
-| `bye` | Session ended | ✅ | — | ✅ |
+| `subagent` | A background agent finished | ✅ | ✅ | — |
+| `bye` | Session ended | ✅ | ✅ | ✅ |
 
 A dash means that agent emits no event that honestly means this. Those roles
 stay silent there rather than being wired to something that nearly means it —
@@ -95,7 +89,7 @@ HARK_SOUND_ATTENTION=/home/me/sounds/hey.wav
 |---|---|---|
 | `HARK_PRESET` | `default` `subtle` `macos` `minimal` `off` | Unknown values fall back to `default` |
 | `HARK_VOLUME` | `0`–`100` | Ignored by `aplay` and PowerShell, which have no volume control |
-| `HARK_PLAYER` | a command name | Force a player instead of auto-detecting |
+| `HARK_PLAYER` | a command name or path | Force a player instead of auto-detecting |
 | `HARK_SOUND_<ROLE>` | a file path | Override one role: `DONE`, `ATTENTION`, `ERROR`, `SUBAGENT`, `BYE` |
 
 The config file is **parsed against an allowlist, never sourced**. A settings
@@ -120,14 +114,13 @@ Worth knowing before you let a stranger's script run on every turn:
 1. Your agent's integration runs `scripts/hark.sh <role>`.
 2. That script maps `(preset, role)` to a file and hands it to an audio player.
    Hook payloads arriving on stdin are **ignored** — the role comes in as an
-   argument, which is why no JSON parser is needed. (Codex is the exception: it
-   passes its event type as JSON in argv, and gets a ten-line substring match
-   rather than a parser.)
+   argument, which is why no JSON parser is needed.
 3. The script **exits 0 on every path**, including when the file is missing, the
    player is absent, or the config is malformed. A notifier that can break your
    session is worse than no notifier.
 
-Playback never blocks the agent.
+Codex launches playback in the background and Claude Code uses asynchronous
+hooks, so their turns do not wait for the sound to finish.
 
 ## The sounds
 
@@ -141,14 +134,15 @@ sample-pack attribution to trace.
 ## Turning it off
 
 `HARK_PRESET=off` silences everything while leaving the wiring in place — in
-Claude Code, `/hark off`. To remove it entirely, uninstall the plugin or delete
-the lines you added to your agent's config.
+Claude Code, `/hark off`. To remove it entirely, uninstall the plugin or remove
+the hook entries added to an agent configured by hand.
 
 ## Contributing
 
 Adding an agent is the most useful thing you can contribute, and it is usually
 a documentation file plus a table row. See [CONTRIBUTING.md](CONTRIBUTING.md).
-Tests run with `sh tests/test.sh` and need no audio device.
+Tests run with `sh tests/test.sh` and `python3 tests/test_metadata.py`; neither
+needs an audio device.
 
 ## Prior art
 

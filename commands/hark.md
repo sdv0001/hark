@@ -16,7 +16,7 @@ parent directory, if absent. Only these keys are read; anything else is ignored:
 |-----|--------|---------|
 | `HARK_PRESET` | `default`, `subtle`, `macos`, `minimal`, `off` | Which sound set to use |
 | `HARK_VOLUME` | `0`-`100` | Playback volume (ignored by `aplay` and PowerShell) |
-| `HARK_PLAYER` | a command name | Force a specific audio player |
+| `HARK_PLAYER` | a command name or path | Force a specific audio player |
 | `HARK_SOUND_DONE` | a file path | Override just the "finished" sound |
 | `HARK_SOUND_ATTENTION` | a file path | Override just the "needs you" sound |
 | `HARK_SOUND_ERROR` | a file path | Override just the "tool failed" sound |
@@ -58,8 +58,10 @@ sounds back, and that this is preferable to uninstalling if they only want quiet
 for a while.
 
 **`status`** — show the active preset, volume, any per-role overrides, and which
-audio player would actually be used on this machine. Detect the player with:
-`for p in afplay paplay aplay ffplay play; do command -v $p && break; done`
+audio player would actually be used on this machine. Environment variables
+override the config file and must be reflected in the result. Respect
+`HARK_PLAYER` first; otherwise detect with:
+`for p in afplay paplay aplay ffplay play powershell.exe pwsh; do command -v "$p" && break; done`
 
 ## Rules
 

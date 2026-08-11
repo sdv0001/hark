@@ -30,21 +30,17 @@ silence, because the user stops trusting all of them.
 ## Supported today
 
 - [Claude Code](claude-code.md) — installs as a plugin, no manual config
-- [Codex](codex.md) — one line in `config.toml`
+- [Codex 0.147+](codex.md) — installs as a plugin, no manual config
 - [Gemini CLI](gemini.md) — a `hooks` block in `settings.json`
 
 ## Wiring up an agent that is not listed
 
 If it can run a shell command on an event, it can use hark. You need two things:
 
-1. **Where it configures event commands.** A hooks file, a `notify` setting, a
-   plugin manifest.
-2. **How it passes the event.** Two shapes exist in the wild:
-   - *One command per event* (Claude Code, Gemini CLI). Easiest: point each
-     event at `hark.sh <role>` and you are done.
-   - *One command for all events, with the event in the payload* (Codex). Then
-     hark needs a small mapping function. `codex_role()` in `scripts/hark.sh` is
-     the worked example — about ten lines, no JSON parser.
+1. **Where it configures event commands.** A hooks file or plugin manifest.
+2. **Which events honestly map to hark's roles.** Point each event at
+   `hark.sh <role>` and ignore the payload. This is the same model used by all
+   three supported integrations and keeps the audio core agent-neutral.
 
 Contributions adding an agent are welcome. Please include the version you
 tested against and a link to that agent's hook documentation, so the next

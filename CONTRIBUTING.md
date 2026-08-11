@@ -24,6 +24,7 @@ To try your change against a live Claude Code:
 ## Before you open a pull request
 
 - `sh tests/test.sh` passes.
+- `python3 tests/test_metadata.py` passes.
 - `shellcheck scripts/hark.sh tests/test.sh` is clean.
 - If you touched `scripts/hark.sh`, make the same change in
   `scripts/hark.ps1`. They are deliberate twins — the same config file has to
@@ -57,9 +58,9 @@ The most useful contribution, and usually the smallest. The core is a command �
    role to something that nearly means it is worse than silence — the user stops
    trusting every sound once one of them lies.
 4. Add a column to the role table in the top-level README.
-5. If the agent passes its event inside a payload rather than letting you name a
-   role per event, add a mapping function next to `codex_role()` in both scripts,
-   with tests in both suites. Please do not add a JSON dependency for it.
+5. Prefer one command per event and pass the role as an argument. If a host only
+   exposes a generic payload-driven callback, keep payload parsing outside the
+   playback scripts so the core remains dependency-free and agent-neutral.
 
 Say which version of the agent you tested against and link its hook docs. These
 formats move, and the next person needs to know when yours went stale.

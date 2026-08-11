@@ -69,6 +69,16 @@ class PluginContracts(unittest.TestCase):
             for marker in legacy:
                 self.assertNotIn(marker, source, f"{marker!r} remains in {path}")
 
+    def test_codex_documentation_uses_native_plugin_install(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        guide = (ROOT / "integrations/codex.md").read_text(encoding="utf-8")
+        for document in (readme, guide):
+            self.assertIn("Codex 0.147", document)
+            self.assertIn("codex plugin marketplace add sdv0001/hark", document)
+            self.assertIn("codex plugin add hark@hark", document)
+            self.assertNotIn("hark.sh install codex", document)
+            self.assertNotIn("plugins cannot contribute hooks", document)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,22 +14,28 @@ Then `/hark test` to hear it, `/hark list` to see the presets.
 | Claude Code event | Role |
 |---|---|
 | `Stop` | `done` |
-| `Notification` | `attention` |
-| `PostToolUseFailure` | `error` |
+| `PermissionRequest` | `attention` |
+| `PostToolUseFailure`, `StopFailure` | `error` |
 | `SubagentStop` | `subagent` |
 | `SessionEnd` | `bye` |
 
 The fullest coverage of the three, which is why the role names read the way
 they do.
 
+Claude Code's broad `Notification` event is deliberately not used: it also
+covers informational messages that do not require the user. `PermissionRequest`
+is the precise “needs you” signal.
+
+On Windows, the dependency-free hook command uses Git Bash, which Claude Code
+selects when Git for Windows is installed. The PowerShell entry point remains
+available for direct use; Codex uses it through its native Windows override.
+
 ## Why these files are at the repository root
 
 `.claude-plugin/`, `hooks/` and `commands/` sit at the top level rather than in
-this directory. Claude Code's installer expects the plugin manifest at the root
-of the source it is given, and `${CLAUDE_PLUGIN_ROOT}` then resolves to that
-root — which is where `scripts/` lives. Moving them under `integrations/` would
-mean the hooks reaching back out with `../../`, on a path that only breaks once
-it is on someone else's machine.
+this directory. Claude Code's manifest selects `hooks/claude.json`, and
+`${CLAUDE_PLUGIN_ROOT}` resolves to the plugin root — which is where `scripts/`
+lives. Codex separately discovers `hooks/hooks.json` from that same root.
 
 The other agents are configured by hand from a snippet, so they have no such
 constraint and live here.

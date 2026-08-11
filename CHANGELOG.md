@@ -7,19 +7,29 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
-- `hark.sh install codex`, which writes the `notify` line into
-  `~/.codex/config.toml` with the absolute path filled in. It prepends the
-  key, because appended below a `[section]` header TOML reads it as part of
-  that section and Codex stays silent. An existing `notify` is never
-  overwritten. Not available in `hark.ps1` yet.
+- Native Codex 0.147+ plugin manifest and hooks for turn completion, permission
+  requests, subagent completion and session end.
+- Contract tests for Codex and Claude plugin metadata and event mappings.
 
 ### Changed
-- The Codex install instructions start from a clone at a stable path and say
-  that `notify` is global, so it is clear there is nothing to repeat per
-  project.
-- `integrations/codex.md` documents why hark cannot be installed as a Codex
-  plugin: Codex accepts the Claude Code manifest and reports success, but
-  `plugin_hooks` is a removed feature in 0.147, so no hook ever runs.
+- Codex and Claude Code now use separate native hook contracts over the same
+  playback core.
+- Claude Code attention sounds use `PermissionRequest` instead of every
+  `Notification`; `StopFailure` now maps to `error`.
+
+### Removed
+- The legacy Codex payload parser and `install codex` configuration writer from
+  both runtime entry points.
+
+### Fixed
+- Environment sound overrides now take precedence over config-file values.
+- POSIX config parsing accepts a final line without a newline and no longer
+  starts `tr` and `sed` for every setting.
+- Leading-zero and oversized volume values no longer reach unsafe arithmetic.
+- Absolute `HARK_PLAYER` paths are respected for recognized players.
+- PowerShell fallback paths are transported as data instead of interpolated
+  into executable source.
+- `/hark status` now reports environment overrides and Windows players.
 
 ## [0.1.0] - 2026-08-10
 
@@ -29,9 +39,7 @@ First release.
 - An agent-neutral core: `scripts/hark.sh <role>`, where role is one of
   `done`, `attention`, `error`, `subagent`, `bye`.
 - Claude Code integration as an installable plugin, covering all five roles.
-- Codex integration through the `notify` program, covering `done` and
-  `attention`. Its JSON payload is matched as a substring rather than parsed,
-  so the runtime stays dependency-free.
+- Initial Codex sound integration for `done` and `attention`.
 - Gemini CLI integration through `settings.json` hooks, covering `done`,
   `attention` and `bye`.
 - Five presets: `default`, `subtle`, `macos`, `minimal`, `off`.
